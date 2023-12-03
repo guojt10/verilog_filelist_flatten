@@ -5,7 +5,7 @@ import re
 def check_env_variable(var_name):
     return var_name in os.environ
 
-def extract_file_paths(input_file, file_paths=[], depth=0):
+def extract_lines(input_file, collected_lines=[], depth=0):
     with open(input_file, 'r') as f:
         content = f.read()
     lines = content.split('\n')
@@ -17,52 +17,60 @@ def extract_file_paths(input_file, file_paths=[], depth=0):
                     nested_file_paths = line.lstrip("-f")
                 elif line.startswith("-F"):
                     nested_file_paths = line.lstrip("-F")
-                nested_file_paths = os.path.abspath(nested_file_paths.strip())
-                extract_file_paths(nested_file_paths, file_paths, depth + 1)
-            elif line.startswith("-v"):
-                line = replace_content(line, "-v")
-                file_paths.append(line)
-            elif line.startswith("-y"):
-                line = replace_content(line, "-y")
-                file_paths.append(line)
-            elif line.startswith("-I"):
-                line = replace_content(line, "-I")
-                file_paths.append(line)
-            elif line.startswith("`"):
-                pass              
+                nested_lines = os.path.abspath(nested_file_paths.strip())
+                extract_lines(nested_lines, collected_lines, depth + 1)
             else:  
-                file_paths.append(line)
-    return file_paths
+                collected_lines.append(line)
+    return collected_lines
 
-def replace_content(line, keyword):
+def replace_path_with_cmd_unit(line, keyword):
     line = line.lstrip(keyword)
     line = line.lstrip()
     if line.startswith("$"):
         pass
     else:
         line = keyword + " " + os.path.abspath(line)
-    return  line  
+    return  line
 
-def replace_file_paths(file_paths):
+def replace_path_with_cmd(lines):
+    replaced_lines = []
+    for line in lines:
+        line = line.strip()
+        if line.startswith("-v"):
+            line = replace_path_with_cmd_unit(line, "-v")
+            replaced_lines.append(line)
+        elif line.startswith("-y"):
+            line = replace_path_with_cmd_unit(line, "-y")
+            replaced_lines.append(line)
+        elif line.startswith("-I"):
+            line = replace_path_with_cmd_unit(line, "-I")
+            replaced_lines.append(line)
+        elif line.startswith("`"):
+            pass              
+        else:  
+            replaced_lines.append(line)
+    return replaced_lines 
+
+def replace_path_without_cmd(lines):
     replaced_paths = []
-    for path in file_paths:
-        if "$" in path and "\$" not in path:
-            idx = path.index("$")
-            if "{" == path[idx+1]:
+    for line in lines:
+        if "$" in line and "\$" not in line:
+            idx = line.index("$")
+            if "{" == line[idx+1]:
                 lower = idx+1
-                upper = path[idx:].index("}") + idx
-                path = path.replace(path[lower-1:upper+1], os.environ[path[lower+1:upper]])
-            elif "/" in path[idx:]:
+                upper = line[idx:].index("}") + idx
+                line = line.replace(line[lower-1:upper+1], os.environ[line[lower+1:upper]])
+            elif "/" in line[idx:]:
                 lower = idx
-                upper = path[idx:].index("/") + idx
-                path = path.replace(path[lower:upper], os.environ[path[lower+1:upper]])
+                upper = line[idx:].index("/") + idx
+                line = line.replace(line[lower:upper], os.environ[line[lower+1:upper]])
             else:
-                path = path.replace(path[idx:], os.environ[path[idx+1:]])
-        if path.startswith("+") or  path.startswith("-"):
+                line = line.replace(line[idx:], os.environ[line[idx+1:]])
+        if line.startswith("+") or  line.startswith("-"):
             pass
         else:
-            path = os.path.abspath(path)
-        replaced_paths.append(path)
+            line = os.path.abspath(line)
+        replaced_paths.append(line)
     return replaced_paths
 
 # def process_directive(line):
@@ -110,13 +118,12 @@ def replace_file_paths(file_paths):
 
 def main(input_file, output_file=None, macro=None):
     base_path = os.getcwd()
-    file_paths = extract_file_paths(input_file)
-    print(f"file_paths_0 = {file_paths}")
-    file_paths = replace_file_paths(file_paths)
-    print(f"file_paths_1 = {file_paths}")
+    lines = extract_lines(input_file)
+    lines = replace_path_with_cmd(lines)
+    lines = replace_path_without_cmd(lines)
     with open(output_file, mode='w') as f:
-        for path in file_paths:
-            f.write(path + '\n')
+        for line in lines:
+            f.write(line + '\n')
 
 
 if __name__ == '__main__':
