@@ -11,16 +11,15 @@ def extract_lines(input_file, collected_lines=[], depth=0):
     lines = content.split('\n')
     for line in lines:
         line = line.strip()
-        if line and not (line.startswith("//") or line.startswith("#")):
-            if line.startswith("-f") or line.startswith("-F"):
-                if line.startswith("-f"):   
-                    nested_file_paths = line.lstrip("-f")
-                elif line.startswith("-F"):
-                    nested_file_paths = line.lstrip("-F")
-                nested_lines = os.path.abspath(nested_file_paths.strip())
-                extract_lines(nested_lines, collected_lines, depth + 1)
-            else:  
-                collected_lines.append(line)
+        if line.startswith("-f") or line.startswith("-F"):
+            if line.startswith("-f"):   
+                nested_file_paths = line.lstrip("-f")
+            elif line.startswith("-F"):
+                nested_file_paths = line.lstrip("-F")
+            nested_lines = os.path.abspath(nested_file_paths.strip())
+            extract_lines(nested_lines, collected_lines, depth + 1)
+        else:  
+            collected_lines.append(line)
     return collected_lines
 
 def replace_path_with_cmd_unit(line, keyword):
@@ -34,21 +33,20 @@ def replace_path_with_cmd_unit(line, keyword):
 
 def replace_path_with_cmd(lines):
     replaced_lines = []
+    cmds = ["-v", "-y", "-I", "-incdir", "+incdir+", "//", "#"]
+    status = 0
     for line in lines:
         line = line.strip()
-        if line.startswith("-v"):
-            line = replace_path_with_cmd_unit(line, "-v")
-            replaced_lines.append(line)
-        elif line.startswith("-y"):
-            line = replace_path_with_cmd_unit(line, "-y")
-            replaced_lines.append(line)
-        elif line.startswith("-I"):
-            line = replace_path_with_cmd_unit(line, "-I")
-            replaced_lines.append(line)
-        elif line.startswith("`"):
-            pass              
-        else:  
-            replaced_lines.append(line)
+        if line:
+            for cmd in cmds:
+                if line.startswith(cmd):
+                    line = replace_path_with_cmd_unit(line, cmd)
+                    replaced_lines.append(line)
+                    status = 1
+            if status == 0:
+                replaced_lines.append(line)
+            else:
+                status = 0
     return replaced_lines 
 
 def replace_path_without_cmd(lines):
@@ -119,7 +117,9 @@ def replace_path_without_cmd(lines):
 def main(input_file, output_file=None, macro=None):
     base_path = os.getcwd()
     lines = extract_lines(input_file)
+    print(f"lines = {lines}")
     lines = replace_path_with_cmd(lines)
+    print(f"lines = {lines}")
     lines = replace_path_without_cmd(lines)
     with open(output_file, mode='w') as f:
         for line in lines:
