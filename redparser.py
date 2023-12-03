@@ -43,6 +43,7 @@ def replace_path_with_cmd(lines):
                     line = replace_path_with_cmd_unit(line, cmd)
                     replaced_lines.append(line)
                     status = 1
+                    break
             if status == 0:
                 replaced_lines.append(line)
             else:
