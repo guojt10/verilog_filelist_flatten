@@ -10,6 +10,5 @@
 4. -v xxx.v
 5. -I xxx
 6. -y xxx
-7. $MACRO  or ${MACRO}
-8. -incdir
-9. +incdir+
+7. -incdir
+8. +incdir+
