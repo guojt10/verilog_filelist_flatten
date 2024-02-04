@@ -127,49 +127,6 @@ def replace_path_with_cmd_unit_multi_line(lines):
         replaced_lines.append(line)
     return replaced_lines  
 
-# def process_directive(line):
-#     processed_paths = []
-#     for path in file_paths:
-#         # 处理嵌套的ifdef、elseif和endif的逻辑
-#             # 处理条件编译指令  
-#             if line.startswith('`'):  
-#                 directive = line[1:].strip()  
-#                 if directive.startswith('ifdef') or directive.startswith('ifndef'):  
-#                     # 解析ifdef和ifndef指令  
-#                     macro = directive.split()[1]  
-#                     if (directive.startswith('ifdef') and not defines.get(macro)) or \  
-#                             (directive.startswith('ifndef') and defines.get(macro)):  
-#                         # 跳过未定义或不定义的代码块  
-#                         while lines and not lines[0].strip().startswith('`endif'):  
-#                             lines.pop(0)  
-#                     else:  
-#                         # 定义宏  
-#                         defines[macro] = True  
-#                 elif directive.startswith('else') or directive.startswith('elsif'):  
-#                     # 解析else和elsif指令  
-#                     if directive.startswith('elsif'):  
-#                         macro = directive.split()[1]  
-#                         if not defines.get(macro):  
-#                             # 跳过未定义的代码块  
-#                             while lines and not lines[0].strip().startswith('`endif'):  
-#                                 lines.pop(0)  
-#                         else:  
-#                             # 定义宏  
-#                             defines[macro] = True  
-#                     # 处理else指令时，跳过之前的代码块  
-#                     while lines and not lines[0].strip().startswith('`endif'):  
-#                         prev_line = lines.pop(0)  
-#                         if prev_line.strip().startswith('`elsif') or prev_line.strip().startswith('`else'):  
-#                             break  
-#                 elif directive.startswith('endif'):  
-#                     # 解析endif指令，移除定义的宏  
-#                     macro = directive.split()[1] if len(directive.split()) > 1 else None  
-#                     if macro:  
-#                         defines.pop(macro, None)  
-#                 continue 
-#         pass
-#     return processed_paths
-
 def main(input_file, output_file=None, macro=None):
     lines = extract_lines(input_file)
     lines = replace_path_with_cmd(lines)
