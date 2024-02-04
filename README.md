@@ -1,4 +1,4 @@
-# verilog filelist parser
+# verilog filelist flatten
 ## Example
 1. python3 redparser.py -i input.vc -o output.vc
 
